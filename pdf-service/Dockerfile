@@ -28,6 +28,8 @@ USER pptruser
 
 ENV NODE_ENV=production
 ENV PORT=8080
+# Allow imports from /app/src/ to resolve modules installed in pdf-service/node_modules/
+ENV NODE_PATH=/app/pdf-service/node_modules
 
 # tsx runs TypeScript directly (no separate build step).
 # --tsconfig resolves the @/ path aliases defined in pdf-service/tsconfig.json.
