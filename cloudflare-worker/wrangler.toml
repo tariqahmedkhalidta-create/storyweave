@@ -1,0 +1,7 @@
+name = "storyweave-r2"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "storyweave-pdfs"

@@ -12,8 +12,8 @@
  *      as a safety net if the upload failed (the local file is kept in that
  *      case).  The buffer is streamed directly.
  *
- * Response 302: redirect to pre-signed S3 URL          (production)
- * Response 200: application/pdf binary stream           (local fallback)
+ * Response 200: application/pdf binary stream via R2 Worker  (production)
+ * Response 200: application/pdf binary stream from /tmp       (local fallback)
  * Response 404: { error: string }
  * Response 409: { error: string }                       (not yet fulfilled)
  */
@@ -47,18 +47,16 @@ export async function GET(
     )
   }
 
-  // ── Strategy 1: cloud storage signed URL ───────────────────────────────────
+  // ── Strategy 1: cloud storage via R2 Worker ───────────────────────────────
   if (order.pdfS3Key && storage.isConfigured()) {
     try {
-      const signedUrl = await storage.getSignedDownloadUrl(
+      return await storage.getDownloadResponse(
         order.pdfS3Key,
         order.bookTitle,
         order.childName,
       )
-      // 302 redirect — browser follows it and downloads straight from the bucket
-      return NextResponse.redirect(signedUrl, { status: 302 })
     } catch (err) {
-      console.error('[download] Failed to generate signed URL, falling back to /tmp:', err)
+      console.error('[download] Failed to fetch from R2 Worker, falling back to /tmp:', err)
       // Fall through to local fallback below
     }
   }
