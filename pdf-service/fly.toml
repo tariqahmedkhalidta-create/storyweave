@@ -1,0 +1,49 @@
+# Fly.io configuration for the StoryWeave PDF generation microservice.
+# Deploy with:  fly deploy --config pdf-service/fly.toml
+#
+# Before first deploy:
+#   fly apps create storyweave-pdf-service
+#   fly secrets set --app storyweave-pdf-service \
+#     PDF_SERVICE_SECRET=<shared-secret> \
+#     STORAGE_BUCKET=<bucket> \
+#     STORAGE_REGION=auto \
+#     STORAGE_ENDPOINT=https://<account>.r2.cloudflarestorage.com \
+#     STORAGE_ACCESS_KEY_ID=<key> \
+#     STORAGE_SECRET_ACCESS_KEY=<secret> \
+#     NEXT_APP_URL=https://your-app.vercel.app
+
+app            = "storyweave-pdf-service"
+primary_region = "iad"   # US East — change to match your Vercel/Neon region
+kill_signal    = "SIGINT"
+kill_timeout   = 30
+
+[build]
+  dockerfile = "pdf-service/Dockerfile"
+  # Build context is the project root so src/ is available to the Dockerfile
+  build_target = ""
+
+[env]
+  PORT       = "8080"
+  NODE_ENV   = "production"
+  # Chrome flags that improve stability in constrained Docker environments
+  PUPPETEER_ARGS = "--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu"
+
+[http_service]
+  internal_port        = 8080
+  force_https          = true
+  auto_stop_machines   = true   # scale to zero when idle (saves cost)
+  auto_start_machines  = true   # cold-start on first request (~3 s)
+  min_machines_running = 0
+  processes            = ["app"]
+
+  [http_service.concurrency]
+    # Puppeteer is CPU-heavy — limit concurrent PDF jobs per instance
+    type       = "requests"
+    soft_limit = 2
+    hard_limit = 4
+
+[[vm]]
+  # Puppeteer + Chromium needs real memory. 512 MB is the minimum;
+  # 1 GB is more comfortable for concurrent requests.
+  memory = "1gb"
+  cpus   = 1

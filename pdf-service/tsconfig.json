@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target":           "ES2022",
+    "module":           "CommonJS",
+    "lib":              ["ES2022"],
+    "strict":           true,
+    "esModuleInterop":  true,
+    "skipLibCheck":     true,
+    "resolveJsonModule": true,
+    // tsx resolves paths at runtime using these settings
+    "baseUrl":          ".",
+    "paths": {
+      "@/*": ["../src/*"]
+    }
+  },
+  "include": ["server.ts"]
+}

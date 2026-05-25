@@ -1,0 +1,14 @@
+node_modules/
+pdf-service/node_modules/
+.next/
+out/
+.env
+.env.local
+.env.*.local
+prisma/generated/
+coverage/
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+.vercel

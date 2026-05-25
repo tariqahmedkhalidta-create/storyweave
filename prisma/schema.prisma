@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Orders ────────────────────────────────────────────────────────────────────
+//
+// One row per cart entry that has been submitted.
+// status lifecycle: pending_payment → paid → generating → fulfilled
+//                                                       ↘ failed
+//
+// Appearance fields are stored as flat strings rather than JSON so they are
+// individually queryable and avoid Prisma Json type casting.
+
+model Order {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Book
+  bookId         String
+  bookTitle      String
+  priceFormatted String
+  priceCents     Int
+
+  // Personalisation
+  childName String
+  skinTone  String
+  hairColor String
+  hairStyle String
+  eyeColor  String
+
+  // Payment & fulfilment
+  status                String  @default("pending_payment")
+  stripePaymentIntentId String?
+  customerEmail         String?
+
+  // Cloud storage — null until the PDF is uploaded to S3 / R2
+  pdfS3Key              String?
+
+  @@index([stripePaymentIntentId])
+  @@map("orders")
+}

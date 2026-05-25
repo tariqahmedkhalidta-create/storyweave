@@ -1,0 +1,13 @@
+# Normalize all text files to LF in the repo (Windows-safe)
+* text=auto eol=lf
+
+# Explicitly binary — never mangle
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.pdf  binary
