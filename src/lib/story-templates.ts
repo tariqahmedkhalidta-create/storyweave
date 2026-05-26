@@ -165,6 +165,151 @@ const TIME_TRAVELLER: StoryPage[] = [
   },
 ]
 
+// ── The Superhero Academy ─────────────────────────────────────────────────────
+
+const SUPERHERO_ACADEMY: StoryPage[] = [
+  {
+    pageNumber:  1,
+    gradient:    'from-indigo-50 to-violet-100',
+    accentColor: 'text-indigo-700',
+    text: 'The acceptance letter arrived in a silver envelope that glowed faintly in the dark. {{NAME}} turned it over three times before daring to open it. Inside, in bold golden letters: "Welcome to the Superhero Academy. Your gift is real. Your training begins now." {{NAME}} had always felt a little different — a little more. Now, for the first time, that felt like a very good thing.',
+  },
+  {
+    pageNumber:  5,
+    gradient:    'from-violet-50 to-purple-100',
+    accentColor: 'text-violet-700',
+    text: 'On the first day, the other students compared powers — one could run faster than sound, another could grow flowers from thin air. Then the teacher turned to {{NAME}}. "And what is your gift?" {{NAME}} took a breath — and the whole room filled with warmth, a golden glow that made everyone smile without knowing why. "I see," said the teacher softly. "You give people courage. That is the rarest power of all."',
+  },
+  {
+    pageNumber:  12,
+    gradient:    'from-blue-50 to-indigo-100',
+    accentColor: 'text-indigo-700',
+    text: 'The academy alarm rang for the first time in fifty years. A great storm of fear was sweeping toward the city — a storm that drained the courage from everyone it touched. One by one the students faltered. But {{NAME}} stood firm at the edge of the tower, raised both hands, and sent that golden warmth out into the dark clouds. The storm shuddered. It had never met anyone like {{NAME}} before.',
+  },
+  {
+    pageNumber:  20,
+    gradient:    'from-purple-50 to-indigo-100',
+    accentColor: 'text-purple-700',
+    text: 'The storm cleared. The city woke up brave again. The teacher placed a gleaming badge on {{NAME}}\'s chest — not for having the strongest power, but for being exactly the hero the world most needed. "Anyone can be powerful," the teacher said. "But choosing to lift others up — that is what makes a true superhero." {{NAME}} looked down at the badge and smiled. Class one was just getting started.',
+  },
+]
+
+// ── The Pirate's Treasure ─────────────────────────────────────────────────────
+
+const PIRATE_TREASURE: StoryPage[] = [
+  {
+    pageNumber:  1,
+    gradient:    'from-sky-50 to-blue-100',
+    accentColor: 'text-sky-700',
+    text: 'The map appeared rolled up inside a bottle that washed onto the beach on the morning of {{NAME}}\'s birthday. It was old — old enough that the ink had turned the colour of a sunset — and right in the centre, above a drawing of a tiny island, someone had written: "Only the bravest captain will find this." {{NAME}} smoothed the map flat, looked at the sea, and made a decision.',
+  },
+  {
+    pageNumber:  5,
+    gradient:    'from-teal-50 to-cyan-100',
+    accentColor: 'text-teal-700',
+    text: '"Captain {{NAME}}!" squawked a parrot from the ship\'s mast — a parrot with feathers the colours of a stained-glass window and eyes that held a thousand secrets. "I\'ve been waiting for you for a hundred years," it said. "I know where the treasure is. But first, you must prove yourself brave enough to deserve it." {{NAME}} squared both shoulders. "Tell me what to do," said {{NAME}}.',
+  },
+  {
+    pageNumber:  12,
+    gradient:    'from-blue-50 to-sky-100',
+    accentColor: 'text-blue-700',
+    text: 'The Sea Serpent rose from the deep, vast and ancient and lonely. Every pirate in history had fled from those glowing eyes. But {{NAME}} did not. "You are not my enemy," {{NAME}} said steadily. The serpent paused. It had never been spoken to kindly before. Slowly, it lowered its great head — and with a single sweep of its tail, it cleared the path to the treasure island.',
+  },
+  {
+    pageNumber:  20,
+    gradient:    'from-cyan-50 to-teal-100',
+    accentColor: 'text-cyan-700',
+    text: 'The treasure chest was not full of gold. It was full of letters — hundreds of them, from children across centuries who had made it this far. {{NAME}} added one too. Then {{NAME}} looked out from the island at the sea stretching endlessly in every direction and felt something better than any coin: the certainty that the world is large, and adventures are everywhere, and {{NAME}} was exactly the kind of captain who could find them.',
+  },
+]
+
+// ── The Magic Academy ─────────────────────────────────────────────────────────
+
+const MAGIC_ACADEMY: StoryPage[] = [
+  {
+    pageNumber:  1,
+    gradient:    'from-purple-50 to-violet-100',
+    accentColor: 'text-violet-700',
+    text: 'The doors of Wyndmere Academy were as tall as oak trees and carved with stars that moved when you weren\'t looking at them directly. {{NAME}} had read every book ever written about magic but had never cast a single spell. "That\'s precisely why we chose you," said the headmistress at the gate. "Real magic doesn\'t come from books. It comes from here." She tapped {{NAME}}\'s chest, right over the heart.',
+  },
+  {
+    pageNumber:  5,
+    gradient:    'from-fuchsia-50 to-purple-100',
+    accentColor: 'text-fuchsia-700',
+    text: 'In the first class, every student had to light a candle with their mind. The candles blazed, flickered, and popped. When it was {{NAME}}\'s turn, something unexpected happened: the candle didn\'t just light — every candle in the room lit, and the ceiling filled with small golden stars. The class went completely silent. Even the teacher looked surprised. "I\'ve taught here for forty years," she whispered, "and I\'ve never seen that before."',
+  },
+  {
+    pageNumber:  12,
+    gradient:    'from-violet-50 to-indigo-100',
+    accentColor: 'text-indigo-700',
+    text: 'The ancient library had been dark for three hundred years — sealed by a spell no one could unravel. Inside were all the lost spells of Wyndmere. {{NAME}} stood before the locked door while every other student waited. Slowly, {{NAME}} reached out a hand — not to cast a spell, but simply to listen. The door seemed to breathe. Then it opened. "Some doors," the headmistress said quietly, "only open for kindness."',
+  },
+  {
+    pageNumber:  20,
+    gradient:    'from-pink-50 to-fuchsia-100',
+    accentColor: 'text-fuchsia-700',
+    text: 'By the end of the first year, everyone at Wyndmere had learned something new about magic. But the most important lesson hadn\'t come from a book or a spell — it had come from watching {{NAME}}. Magic, they now understood, wasn\'t about power. It was about choosing, again and again, to use what you had to help the people and the world around you. {{NAME}} had known that all along.',
+  },
+]
+
+// ── The Safari Quest ──────────────────────────────────────────────────────────
+
+const SAFARI_QUEST: StoryPage[] = [
+  {
+    pageNumber:  1,
+    gradient:    'from-amber-50 to-orange-100',
+    accentColor: 'text-amber-700',
+    text: 'The golden savannah stretched in every direction, shimmering under a sky so blue it hurt to look at. {{NAME}} had arrived at sunrise with a small backpack, a field notebook, and a feeling that something extraordinary was about to happen. From somewhere in the tall grass came a rumbling sound — not frightening, but like a question. {{NAME}} stepped forward. "Hello?" A pair of enormous amber eyes blinked through the grass.',
+  },
+  {
+    pageNumber:  5,
+    gradient:    'from-yellow-50 to-amber-100',
+    accentColor: 'text-amber-700',
+    text: 'The old lion had been king of this land for fifteen years — but today his crown was heavy. "The watering hole has dried up," he told {{NAME}}, his voice low and tired. "The animals are moving away, and without them this place will die. We have tried everything." {{NAME}} opened the field notebook and studied it carefully. "I think I know what\'s blocking the spring," said {{NAME}}. "Follow me."',
+  },
+  {
+    pageNumber:  12,
+    gradient:    'from-orange-50 to-amber-100',
+    accentColor: 'text-orange-700',
+    text: 'Deep in a rocky ravine, a great tangle of fallen trees had blocked the underground spring. A dozen animals had tried to move them — and failed. But {{NAME}} didn\'t try to push alone. {{NAME}} asked: the elephants to lift, the meerkats to dig, the birds to call out directions from above. Together, slowly, the blockage shifted — and with a great rushing sound, clean cold water burst through, sparkling in the afternoon sun.',
+  },
+  {
+    pageNumber:  20,
+    gradient:    'from-lime-50 to-yellow-100',
+    accentColor: 'text-green-700',
+    text: 'By evening the watering hole was full, and every animal in the savannah had come to drink. The old lion walked beside {{NAME}} as the sun turned orange and enormous behind the flat-topped trees. "In all my years," he said, "I have never seen a human who listened to the land the way you do." {{NAME}} looked out over the rippling gold and green and knew — this was only the first of many quests. The wild had chosen {{NAME}}.',
+  },
+]
+
+// ── The Mermaid Kingdom ───────────────────────────────────────────────────────
+
+const MERMAID_KINGDOM: StoryPage[] = [
+  {
+    pageNumber:  1,
+    gradient:    'from-cyan-50 to-teal-100',
+    accentColor: 'text-teal-700',
+    text: 'The shell was unlike any {{NAME}} had ever seen — spiral-shaped, glowing faintly from within, humming a note just below the edge of hearing. When {{NAME}} held it to one ear, a voice as clear as deep water spoke: "We need you. The light of our kingdom is fading. Please come." {{NAME}} stood at the water\'s edge, looked out at the horizon, and stepped in.',
+  },
+  {
+    pageNumber:  5,
+    gradient:    'from-teal-50 to-cyan-100',
+    accentColor: 'text-cyan-700',
+    text: 'The Mermaid Kingdom was everything the stories had promised and more: towers of coral, streets of smooth white sand, gardens that glowed in every colour. But the great Crystal at its heart — the source of all the kingdom\'s light — was cracked, its glow flickering. The mermaid queen bowed her silver-crowned head. "Only a child from the land can mend what we cannot," she said, "because the crack came from forgetting the surface world."',
+  },
+  {
+    pageNumber:  12,
+    gradient:    'from-sky-50 to-blue-100',
+    accentColor: 'text-blue-700',
+    text: 'The Crystal needed something the sea had lost: the memory of rain — of how water fell from clouds and sang as it hit the surface from above. {{NAME}} closed both eyes and remembered: puddles and raincoats, and the smell of the earth drinking, and the sound of drops on a window at night. Slowly, those memories flowed through {{NAME}}\'s hands into the Crystal. The crack began to close.',
+  },
+  {
+    pageNumber:  20,
+    gradient:    'from-emerald-50 to-cyan-100',
+    accentColor: 'text-emerald-700',
+    text: 'The light returned in a wave of warm gold and blue, rushing through every coral tower and shell-paved street. The kingdom erupted with celebration. The queen pressed a small luminous pearl into {{NAME}}\'s palm. "It will glow whenever the sea is thinking of you," she said. "And the sea always will." Back on the beach, as the sun set, {{NAME}} held the pearl and watched it glow — a small, steady light, like a promise kept across two worlds.',
+  },
+]
+
 // ── Registry ──────────────────────────────────────────────────────────────────
 
 export const BOOK_STORIES: Record<string, StoryPage[]> = {
@@ -173,6 +318,11 @@ export const BOOK_STORIES: Record<string, StoryPage[]> = {
   'ocean-of-dreams':     OCEAN_OF_DREAMS,
   'dragon-keeper':       DRAGON_KEEPER,
   'time-traveller':      TIME_TRAVELLER,
+  'superhero-academy':   SUPERHERO_ACADEMY,
+  'pirate-treasure':     PIRATE_TREASURE,
+  'magic-academy':       MAGIC_ACADEMY,
+  'safari-quest':        SAFARI_QUEST,
+  'mermaid-kingdom':     MERMAID_KINGDOM,
 }
 
 /**

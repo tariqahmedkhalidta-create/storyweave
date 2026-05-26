@@ -10,8 +10,11 @@ export interface CharacterAppearance {
   eyeColor: EyeColor
 }
 
+export type Gender = 'boy' | 'girl'
+
 export interface PersonalizationConfig {
   childName: string
+  gender:    Gender
   appearance: CharacterAppearance
 }
 

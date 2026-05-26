@@ -5,17 +5,18 @@ import { useRouter } from 'next/navigation'
 import {
   SKIN_TONES, HAIR_COLORS, HAIR_STYLES, EYE_COLORS,
   type PersonalizationConfig,
-  type SkinTone, type HairColor, type HairStyle, type EyeColor,
+  type SkinTone, type HairColor, type HairStyle, type EyeColor, type Gender,
 } from '@/lib/types'
 import { addToCart } from '@/app/actions/cart'
 import { StoryPreview } from './StoryPreview'
 
 const DEFAULT_CONFIG: PersonalizationConfig = {
   childName: '',
+  gender:    'boy',
   appearance: {
     skinTone:  'medium-light',
     hairColor: 'brown',
-    hairStyle: 'wavy',
+    hairStyle: 'straight',
     eyeColor:  'brown',
   },
 }
@@ -150,6 +151,41 @@ export function PersonalizationTool({ bookId, bookTitle, priceFormatted }: Props
 
         {/* ── LEFT: Customization panel ────────────────────────────────── */}
         <div className="lg:w-5/12 space-y-7">
+
+          {/* Gender toggle */}
+          <section aria-label="Gender">
+            <SectionLabel>Is this book for a…</SectionLabel>
+            <div className="grid grid-cols-2 gap-3">
+              {([ ['boy', '👦', 'Boy'] , ['girl', '👧', 'Girl'] ] as [Gender, string, string][]).map(
+                ([g, emoji, label]) => (
+                  <button
+                    key={g}
+                    onClick={() => {
+                      setConfig(prev => ({
+                        ...prev,
+                        gender: g,
+                        appearance: {
+                          ...prev.appearance,
+                          hairStyle: g === 'boy' ? 'straight' : 'wavy',
+                        },
+                      }))
+                    }}
+                    aria-pressed={config.gender === g}
+                    className={`flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border-2
+                      font-semibold text-sm transition-all duration-150 focus-visible:outline-none
+                      focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2
+                      ${config.gender === g
+                        ? 'border-violet-500 bg-violet-50 text-violet-700 shadow-sm scale-[1.02]'
+                        : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                  >
+                    <span className="text-3xl">{emoji}</span>
+                    <span>{label}</span>
+                  </button>
+                )
+              )}
+            </div>
+          </section>
 
           {/* Name input */}
           <section aria-label="Child's name">

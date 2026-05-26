@@ -35,6 +35,15 @@ const GRADIENT_CSS: Record<string, string> = {
   // ── The Time Traveller ────────────────────────────────────────────────────
   'from-lime-50 to-green-100':    'linear-gradient(155deg, #f7fee7 0%, #dcfce7 100%)',
   'from-yellow-50 to-amber-100':  'linear-gradient(155deg, #fefce8 0%, #fef3c7 100%)',
+  // ── New books (unique gradients only — duplicates omitted) ────────────────
+  'from-indigo-50 to-violet-100': 'linear-gradient(155deg, #eef2ff 0%, #ede9fe 100%)',
+  'from-purple-50 to-indigo-100': 'linear-gradient(155deg, #faf5ff 0%, #e0e7ff 100%)',
+  'from-blue-50 to-sky-100':      'linear-gradient(155deg, #eff6ff 0%, #e0f2fe 100%)',
+  'from-purple-50 to-violet-100': 'linear-gradient(155deg, #faf5ff 0%, #ede9fe 100%)',
+  'from-fuchsia-50 to-purple-100':'linear-gradient(155deg, #fdf4ff 0%, #ede9fe 100%)',
+  'from-pink-50 to-fuchsia-100':  'linear-gradient(155deg, #fdf2f8 0%, #fae8ff 100%)',
+  'from-lime-50 to-yellow-100':   'linear-gradient(155deg, #f7fee7 0%, #fef9c3 100%)',
+  'from-emerald-50 to-cyan-100':  'linear-gradient(155deg, #ecfdf5 0%, #cffafe 100%)',
 }
 const FALLBACK_GRADIENT = 'linear-gradient(155deg, #f8fafc 0%, #e2e8f0 100%)'
 

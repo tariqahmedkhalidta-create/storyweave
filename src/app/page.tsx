@@ -119,40 +119,101 @@ function Hero() {
 function BookCover({ book }: { book: BookEntry }) {
   return (
     <div
-      className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden flex flex-col
-        items-center justify-center select-none"
-      style={{ background: `linear-gradient(135deg, ${book.coverFrom}, ${book.coverTo})` }}
+      className="relative w-full aspect-[3/4] rounded-xl overflow-hidden select-none"
+      style={{ background: `linear-gradient(160deg, ${book.coverFrom} 0%, ${book.coverTo} 100%)` }}
     >
-      {/* Decorative circles */}
-      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-black/10" />
+      {/* Spine shadow */}
+      <div className="absolute left-0 inset-y-0 w-5 bg-black/25" />
+      {/* Spine highlight line */}
+      <div className="absolute left-5 inset-y-0 w-px bg-white/20" />
 
-      {/* Spine accent */}
-      <div className="absolute left-0 inset-y-0 w-4 bg-black/20 rounded-r-sm" />
+      {/* Top decorative arc */}
+      <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)' }} />
 
-      {/* Content */}
-      <div className="relative flex flex-col items-center gap-3 px-6 text-center">
-        <span className="text-6xl drop-shadow-md leading-none">{book.coverEmoji}</span>
-        <div>
-          <p
-            className="text-xs font-bold tracking-widest uppercase mb-1.5"
-            style={{ color: book.coverAccent + 'cc' }}
-          >
-            StoryWeave
-          </p>
-          <h3
-            className="font-extrabold text-lg leading-tight"
-            style={{ color: book.coverAccent }}
-          >
-            {book.title}
-          </h3>
-        </div>
+      {/* Bottom decorative arc */}
+      <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(0,0,0,0.15) 0%, transparent 70%)' }} />
+
+      {/* Star field */}
+      {[
+        { top: '12%', left: '20%', size: 3, opacity: 0.4 },
+        { top: '18%', left: '75%', size: 4, opacity: 0.3 },
+        { top: '8%',  left: '55%', size: 2, opacity: 0.5 },
+        { top: '70%', left: '80%', size: 3, opacity: 0.25 },
+        { top: '78%', left: '18%', size: 2, opacity: 0.3 },
+      ].map((s, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            top: s.top, left: s.left,
+            width: s.size, height: s.size,
+            background: book.coverAccent,
+            opacity: s.opacity,
+          }}
+        />
+      ))}
+
+      {/* Decorative border inset */}
+      <div
+        className="absolute inset-x-7 inset-y-5 rounded-lg pointer-events-none"
+        style={{ border: `1px solid ${book.coverAccent}33` }}
+      />
+
+      {/* Header band */}
+      <div
+        className="absolute top-7 inset-x-7 flex items-center justify-center py-1.5"
+        style={{ borderBottom: `1px solid ${book.coverAccent}44` }}
+      >
+        <span
+          className="text-[9px] font-black tracking-[0.25em] uppercase"
+          style={{ color: book.coverAccent, opacity: 0.7 }}
+        >
+          ✦ StoryWeave ✦
+        </span>
       </div>
 
-      {/* Page edge effect */}
-      <div className="absolute right-1.5 inset-y-2 w-1.5 flex flex-col justify-between">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex-1 bg-white/15 rounded-sm mx-px" />
+      {/* Main content */}
+      <div className="absolute inset-x-7 top-16 bottom-14 flex flex-col items-center justify-center gap-4">
+        {/* Emoji in a glowing circle */}
+        <div
+          className="flex items-center justify-center rounded-full"
+          style={{
+            width: 72, height: 72,
+            background: `radial-gradient(circle, ${book.coverAccent}22 0%, transparent 70%)`,
+            boxShadow: `0 0 24px ${book.coverAccent}33`,
+          }}
+        >
+          <span className="text-5xl leading-none drop-shadow-lg">{book.coverEmoji}</span>
+        </div>
+
+        {/* Title */}
+        <h3
+          className="font-black text-center leading-tight text-base"
+          style={{ color: book.coverAccent, textShadow: '0 1px 8px rgba(0,0,0,0.4)' }}
+        >
+          {book.title}
+        </h3>
+      </div>
+
+      {/* Footer band */}
+      <div
+        className="absolute bottom-7 inset-x-7 flex items-center justify-center py-1"
+        style={{ borderTop: `1px solid ${book.coverAccent}44` }}
+      >
+        <span
+          className="text-[8px] font-bold tracking-widest uppercase"
+          style={{ color: book.coverAccent, opacity: 0.55 }}
+        >
+          A personalised storybook
+        </span>
+      </div>
+
+      {/* Page edge stack */}
+      <div className="absolute right-0 inset-y-2 w-3 flex flex-col gap-px pr-0.5">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="flex-1 bg-white/10 rounded-l-sm" />
         ))}
       </div>
     </div>
