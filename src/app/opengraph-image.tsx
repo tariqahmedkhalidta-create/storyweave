@@ -29,14 +29,14 @@ export default function OgImage() {
           padding:        '60px',
         }}
       >
-        {/* Decorative stars */}
-        <div style={{ position: 'absolute', top: 48,  left: 60,  fontSize: 32, opacity: 0.15 }}>★</div>
-        <div style={{ position: 'absolute', top: 72,  right: 80, fontSize: 24, opacity: 0.12 }}>★</div>
-        <div style={{ position: 'absolute', bottom: 60, left: 100, fontSize: 20, opacity: 0.10 }}>★</div>
-        <div style={{ position: 'absolute', bottom: 40, right: 60, fontSize: 28, opacity: 0.12 }}>★</div>
+        {/* Decorative dots */}
+        <div style={{ position: 'absolute', top: 48,  left: 60,  width: 12, height: 12, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+        <div style={{ position: 'absolute', top: 72,  right: 80, width: 8,  height: 8,  borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
+        <div style={{ position: 'absolute', bottom: 60, left: 100, width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.10)' }} />
+        <div style={{ position: 'absolute', bottom: 40, right: 60, width: 10, height: 10, borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
 
-        {/* Logo mark */}
-        <div style={{ fontSize: 64, marginBottom: 24, opacity: 0.9 }}>★</div>
+        {/* Logo mark - circle */}
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', marginBottom: 24 }} />
 
         {/* Brand name */}
         <div
