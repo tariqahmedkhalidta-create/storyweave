@@ -1,0 +1,36 @@
+name: Deploy pdf-service to Render
+
+on:
+  push:
+    branches: [master]
+    paths:
+      # PDF service code
+      - 'pdf-service/**'
+      # Shared modules the pdf-service imports from the monorepo
+      - 'src/lib/storage.ts'
+      - 'src/lib/cart-store.ts'
+      - 'src/workers/pdf.worker.ts'
+      # Docker build context
+      - 'package*.json'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID || 'srv-d8aa0ucm0tmc739u19ug' }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache":"do_not_clear"}')
+          body=$(echo "$response" | head -n -1)
+          status=$(echo "$response" | tail -n 1)
+          echo "HTTP $status"
+          echo "$body"
+          if [ "$status" -ge 400 ]; then
+            echo "Deploy trigger failed!"
+            exit 1
+          fi
+          deploy_id=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id','?'))")
+          echo "Deploy started: $deploy_id"
