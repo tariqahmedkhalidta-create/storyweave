@@ -2,25 +2,30 @@
  * Cloud object storage — backed by a Cloudflare R2 bucket via a
  * lightweight Cloudflare Worker proxy (cloudflare-worker/).
  *
- * Configuration (env vars, see .env.local.example):
- *   STORAGE_WORKER_URL    — full URL of the deployed R2 proxy Worker
- *                           e.g. https://storyweave-r2.tariq-storyweave.workers.dev
- *   STORAGE_WORKER_SECRET — shared secret (must match AUTH_SECRET set on the Worker)
+ * The Worker URL is hardcoded as a default so no extra env var is required
+ * on services that already have PDF_SERVICE_SECRET configured (e.g. Render).
+ *
+ * Configuration (env vars):
+ *   STORAGE_WORKER_URL    — Worker URL (default: https://storyweave-r2.tariq-storyweave.workers.dev)
+ *   STORAGE_WORKER_SECRET — Auth secret for the Worker.
+ *                           Falls back to PDF_SERVICE_SECRET so Render needs no extra config.
  *
  * Graceful degradation:
- *   When env vars are absent (local dev without a Worker), `isConfigured()`
- *   returns false and callers fall back to serving PDFs from /tmp.
- *
- * Download:
- *   Instead of pre-signed S3 URLs, the /api/download route fetches the file
- *   from the Worker (server-side) and streams it to the browser — no S3
- *   credentials or signed-URL machinery needed.
+ *   When no secret is available, `isConfigured()` returns false and callers
+ *   fall back to serving PDFs from /tmp.
  */
 
 import fs from 'fs/promises'
 
-const WORKER_URL    = process.env.STORAGE_WORKER_URL?.replace(/\/$/, '')
-const WORKER_SECRET = process.env.STORAGE_WORKER_SECRET
+// Worker URL is public (not a secret) — hardcode the default so Render needs no extra env var
+const WORKER_URL =
+  (process.env.STORAGE_WORKER_URL ?? 'https://storyweave-r2.tariq-storyweave.workers.dev')
+    .replace(/\/$/, '')
+
+// Auth secret: prefer explicit STORAGE_WORKER_SECRET, fall back to PDF_SERVICE_SECRET
+// Both Vercel and Render already have PDF_SERVICE_SECRET configured
+const WORKER_SECRET =
+  process.env.STORAGE_WORKER_SECRET ?? process.env.PDF_SERVICE_SECRET
 
 /** Sanitise a string for use in a Content-Disposition filename */
 function safeFilename(str: string): string {
@@ -32,18 +37,15 @@ function safeFilename(str: string): string {
 export const storage = {
 
   /**
-   * Returns true when all required environment variables are present.
-   * Use this to gate upload/download logic so the app works in dev without a Worker.
+   * Returns true when the Worker secret is available.
+   * The URL is always known (hardcoded default), so only the secret gates this.
    */
   isConfigured(): boolean {
-    return Boolean(WORKER_URL && WORKER_SECRET)
+    return Boolean(WORKER_SECRET)
   },
 
   /**
    * Upload a generated PDF to R2 via the Worker.
-   *
-   * Object key format: `fulfilled/{orderId}/storybook.pdf`
-   *
    * @returns The object key — store this in the `pdfS3Key` DB column.
    */
   async uploadPDF(orderId: string, localFilePath: string): Promise<string> {
@@ -71,10 +73,6 @@ export const storage = {
   /**
    * Fetch a stored PDF from R2 and return the raw Response so the caller
    * can stream it straight to the browser.
-   *
-   * @param key       Object key returned by uploadPDF()
-   * @param bookTitle Used to build the Content-Disposition filename
-   * @param childName Used to build the Content-Disposition filename
    */
   async getDownloadResponse(
     key:       string,
@@ -91,7 +89,6 @@ export const storage = {
 
     const filename = `${safeFilename(bookTitle)}-starring-${safeFilename(childName) || 'child'}.pdf`
 
-    // Return a new Response that adds the Content-Disposition header
     return new Response(res.body, {
       headers: {
         'Content-Type':        'application/pdf',
