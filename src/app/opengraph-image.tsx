@@ -30,13 +30,13 @@ export default function OgImage() {
         }}
       >
         {/* Decorative stars */}
-        <div style={{ position: 'absolute', top: 48,  left: 60,  fontSize: 32, opacity: 0.15 }}>✦</div>
-        <div style={{ position: 'absolute', top: 72,  right: 80, fontSize: 24, opacity: 0.12 }}>✦</div>
-        <div style={{ position: 'absolute', bottom: 60, left: 100, fontSize: 20, opacity: 0.10 }}>✦</div>
-        <div style={{ position: 'absolute', bottom: 40, right: 60, fontSize: 28, opacity: 0.12 }}>✦</div>
+        <div style={{ position: 'absolute', top: 48,  left: 60,  fontSize: 32, opacity: 0.15 }}>★</div>
+        <div style={{ position: 'absolute', top: 72,  right: 80, fontSize: 24, opacity: 0.12 }}>★</div>
+        <div style={{ position: 'absolute', bottom: 60, left: 100, fontSize: 20, opacity: 0.10 }}>★</div>
+        <div style={{ position: 'absolute', bottom: 40, right: 60, fontSize: 28, opacity: 0.12 }}>★</div>
 
         {/* Logo mark */}
-        <div style={{ fontSize: 64, marginBottom: 24, opacity: 0.9 }}>✦</div>
+        <div style={{ fontSize: 64, marginBottom: 24, opacity: 0.9 }}>★</div>
 
         {/* Brand name */}
         <div
