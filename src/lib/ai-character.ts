@@ -70,7 +70,7 @@ export function buildCharacterPrompt(appearance: AppearanceInput): string {
 // ── API call ──────────────────────────────────────────────────────────────────
 
 const HF_ENDPOINT =
-  'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell/v1/text-to-image'
+  'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell'
 
 /**
  * Generates a character illustration via FLUX.1-schnell on Hugging Face.
