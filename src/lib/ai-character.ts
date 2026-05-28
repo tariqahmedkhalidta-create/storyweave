@@ -142,7 +142,8 @@ export async function generateCharacterImage(
 }
 
 /**
- * Generates a full scene illustration for a story page (384×640).
+ * Generates a full-bleed scene illustration for a story page (512×768).
+ * Sized to fill an A4 page in portrait orientation with object-fit: cover.
  *
  * @param appearance  Character appearance (injected for style consistency)
  * @param childName   Child's name — replaces {{NAME}} in scene descriptions
@@ -164,9 +165,10 @@ export async function generateSceneImage(
   const prompt =
     `children's book watercolor illustration, ${sceneText}, ` +
     `the young child has ${skin}, ${hc} ${hs} hair, ${eyes} eyes, ` +
-    `full scene composition with detailed background, soft pastel colors, ` +
-    `professional storybook art style, Quentin Blake meets Pixar, ` +
-    `warm inviting atmosphere, no text, no speech bubbles`
+    `full-bleed scene composition with rich detailed background filling the entire frame, ` +
+    `soft pastel watercolor style, professional storybook art, Quentin Blake meets Pixar, ` +
+    `warm inviting atmosphere, leave lower third slightly darker for text legibility, ` +
+    `no text, no speech bubbles, no borders, no white margins`
 
-  return callFlux(prompt, 384, 640, `scene — ${scene.slice(0, 40)}`)
+  return callFlux(prompt, 512, 768, `scene — ${scene.slice(0, 40)}`)
 }

@@ -170,17 +170,26 @@ function ProgressBar({ stage }: { stage: Stage }) {
 
 /**
  * Maps a progress message string to an estimated percentage (0–95).
+ * Parses "page X of Y" dynamically so it works for any number of pages.
  * We never reach 100% here — that only happens when status === 'fulfilled'.
  */
 function msgToPct(msg: string | null): number {
   if (!msg) return 5
   const m = msg.toLowerCase()
-  if (m.includes('cover'))      return 18
-  if (m.includes('page 1'))     return 34
-  if (m.includes('page 2'))     return 50
-  if (m.includes('page 3'))     return 66
-  if (m.includes('page 4'))     return 80
-  if (m.includes('rendering'))  return 90
+  if (m.includes('cover')) return 8
+
+  // Parse "page X of Y" dynamically
+  const match = m.match(/page\s+(\d+)\s+of\s+(\d+)/)
+  if (match) {
+    const current = parseInt(match[1], 10)
+    const total   = parseInt(match[2], 10)
+    if (total > 0) {
+      // Pages occupy 10%–88% of the bar
+      return Math.round(10 + (current / total) * 78)
+    }
+  }
+
+  if (m.includes('rendering')) return 90
   return 10
 }
 
@@ -192,19 +201,28 @@ function PollingStatus({ progressMessage }: { progressMessage?: string | null })
   useEffect(() => {
     // Step toward target progressively so the bar doesn't snap
     if (displayed < target) {
-      const id = setTimeout(() => setDisplayed(p => Math.min(p + 2, target)), 80)
+      const id = setTimeout(() => setDisplayed(p => Math.min(p + 1, target)), 60)
       return () => clearTimeout(id)
     }
   }, [displayed, target])
 
-  // Illustration step labels for the mini checklist
+  // Parse total page count from messages like "page 3 of 10"
+  const totalPages = (() => {
+    const m = progressMessage?.toLowerCase() ?? ''
+    const match = m.match(/page\s+\d+\s+of\s+(\d+)/)
+    return match ? parseInt(match[1], 10) : 10
+  })()
+
+  // Build step list dynamically: cover + N page steps + rendering
   const steps = [
-    { key: 'cover',      emoji: '✨', label: 'Cover portrait',   doneAt: 18 },
-    { key: 'page1',      emoji: '🎨', label: 'Scene — page 1',   doneAt: 34 },
-    { key: 'page2',      emoji: '🎨', label: 'Scene — page 2',   doneAt: 50 },
-    { key: 'page3',      emoji: '🎨', label: 'Scene — page 3',   doneAt: 66 },
-    { key: 'page4',      emoji: '🎨', label: 'Scene — page 4',   doneAt: 80 },
-    { key: 'rendering',  emoji: '📖', label: 'Printing PDF',      doneAt: 92 },
+    { key: 'cover', emoji: '✨', label: 'Cover portrait', doneAt: 8 },
+    ...Array.from({ length: totalPages }, (_, i) => ({
+      key:    `page${i + 1}`,
+      emoji:  '🎨',
+      label:  `Scene — page ${i + 1}`,
+      doneAt: Math.round(10 + ((i + 1) / totalPages) * 78),
+    })),
+    { key: 'rendering', emoji: '📖', label: 'Printing PDF', doneAt: 92 },
   ]
 
   return (
@@ -455,14 +473,14 @@ export function CheckoutActions({ orderId, priceFormatted }: Props) {
 
     poll()
 
-    // Safety net: give up after 3 minutes
+    // Safety net: give up after 6 minutes (10 pages × ~5s each + rendering)
     const timeout = setTimeout(() => {
       if (!cancelled && stageRef.current === 'polling') {
         cancelled = true
         setErrorMsg('PDF generation is taking longer than expected. Please refresh the page.')
         setStage('error')
       }
-    }, 180_000)
+    }, 360_000)
 
     return () => { cancelled = true; clearTimeout(timeout) }
   }, [stage, orderId])
@@ -598,7 +616,7 @@ export function CheckoutActions({ orderId, priceFormatted }: Props) {
               <Spinner /> Illustrating your personalised book…
             </div>
             <p className="text-violet-200 text-xs">
-              Painting 5 unique AI illustrations — usually 30–45 seconds
+              Painting 11 unique AI illustrations — usually 60–90 seconds
             </p>
           </div>
           <PollingStatus progressMessage={progressMessage} />
