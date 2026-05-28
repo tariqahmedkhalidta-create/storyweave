@@ -58,16 +58,27 @@ function injectName(text: string, name: string): string {
 // ── HTML builder ─────────────────────────────────────────────────────────────
 
 export interface BookData {
-  childName:  string
-  appearance: AppearanceInput
-  bookTitle?: string
-  bookId?:    string
+  childName:          string
+  appearance:         AppearanceInput
+  bookTitle?:         string
+  bookId?:            string
+  /** Base64 data-URL from AI image generator — if set, replaces the SVG character */
+  characterImageUrl?: string
 }
 
-export function buildBookHTML({ childName, appearance, bookTitle = 'The Enchanted Forest', bookId = 'enchanted-forest' }: BookData): string {
-  // Character SVGs at two sizes: cover (large) and story pages (smaller)
-  const coverSVG = characterSVGString(appearance, childName, { width: 170, height: 238 })
-  const pageSVG  = characterSVGString(appearance, childName, { width: 148, height: 207 })
+export function buildBookHTML({ childName, appearance, bookTitle = 'The Enchanted Forest', bookId = 'enchanted-forest', characterImageUrl }: BookData): string {
+  // Character visuals — use AI image if available, otherwise fall back to SVG
+  const coverChar = characterImageUrl
+    ? `<img src="${characterImageUrl}" width="170" height="238" style="object-fit:contain;object-position:bottom" alt="${childName}"/>`
+    : characterSVGString(appearance, childName, { width: 170, height: 238 })
+
+  const pageChar = characterImageUrl
+    ? `<img src="${characterImageUrl}" width="148" height="207" style="object-fit:contain;object-position:bottom" alt="${childName}"/>`
+    : characterSVGString(appearance, childName, { width: 148, height: 207 })
+
+  // Keep SVG vars for legacy reference (unused when AI image present)
+  const coverSVG = coverChar
+  const pageSVG  = pageChar
 
   const storyPages = getStoryPages(bookId).map(p => {
     const bg = GRADIENT_CSS[p.gradient] ?? FALLBACK_GRADIENT

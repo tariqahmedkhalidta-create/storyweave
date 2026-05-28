@@ -24,6 +24,7 @@ import os        from 'os'
 
 import { buildBookHTML } from '../lib/pdf/page-template'
 import type { AppearanceInput } from '../lib/pdf/character-svg-string'
+import { generateCharacterImage } from '../lib/ai-character'
 
 // ── Output directory ──────────────────────────────────────────────────────────
 // Using os.tmpdir() so this works on macOS, Linux, and Windows.
@@ -50,8 +51,12 @@ export async function runPDFJob(input: PDFJobInput): Promise<string> {
   await fs.mkdir(PDF_TMP_DIR, { recursive: true })
   const outputPath = path.join(PDF_TMP_DIR, `${orderId}.pdf`)
 
+  // Generate AI character illustration (falls back gracefully to SVG if unavailable)
+  console.log('[pdf.worker] Generating AI character illustration…')
+  const characterImageUrl = await generateCharacterImage(appearance) ?? undefined
+
   // Build the full multi-page HTML document
-  const html = buildBookHTML({ childName, appearance, bookTitle, bookId })
+  const html = buildBookHTML({ childName, appearance, bookTitle, bookId, characterImageUrl })
 
   const browser = await puppeteer.launch({
     headless: true,
