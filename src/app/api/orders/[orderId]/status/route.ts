@@ -29,9 +29,10 @@ export async function GET(
   }
 
   return NextResponse.json({
-    status:      order.status,
-    downloadUrl: order.status === 'fulfilled'
+    status:          order.status,
+    downloadUrl:     order.status === 'fulfilled'
       ? `/api/download/${params.orderId}`
       : null,
+    progressMessage: order.progressMessage ?? null,
   })
 }

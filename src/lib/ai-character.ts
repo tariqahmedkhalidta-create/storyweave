@@ -1,8 +1,11 @@
 /**
- * AI Character Illustration Generator
+ * AI Character & Scene Illustration Generator
  *
- * Calls the Hugging Face Inference API (FLUX.1-schnell) to generate a
- * watercolour children's-book-style character illustration.
+ * Calls the Hugging Face Inference API (FLUX.1-schnell) to generate
+ * watercolour children's-book-style illustrations.
+ *
+ *  generateCharacterImage(appearance)               → cover portrait (512×768)
+ *  generateSceneImage(appearance, childName, scene) → story scene (384×640)
  *
  * Returns a base64 data-URL ready to drop into an <img> tag, or null if
  * the token is missing / the API call fails (caller falls back to SVG).
@@ -67,19 +70,19 @@ export function buildCharacterPrompt(appearance: AppearanceInput): string {
   )
 }
 
-// ── API call ──────────────────────────────────────────────────────────────────
+// ── Internal API helper ───────────────────────────────────────────────────────
 
 // The HF router is at router.huggingface.co — the old api-inference.huggingface.co
 // hostname no longer resolves from Vercel's servers.
 const HF_ENDPOINT =
   'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell'
 
-/**
- * Generates a character illustration via FLUX.1-schnell on Hugging Face.
- * Returns a base64 data-URL (`data:image/jpeg;base64,...`) or `null` on failure.
- */
-export async function generateCharacterImage(
-  appearance: AppearanceInput,
+/** Sends one request to FLUX.1-schnell and returns a data-URL or null. */
+async function callFlux(
+  prompt: string,
+  width:  number,
+  height: number,
+  label:  string,
 ): Promise<string | null> {
   const token = process.env.HUGGINGFACE_TOKEN
   if (!token) {
@@ -87,8 +90,7 @@ export async function generateCharacterImage(
     return null
   }
 
-  const prompt = buildCharacterPrompt(appearance)
-  console.log('[ai-character] Generating with prompt:', prompt.slice(0, 80) + '…')
+  console.log(`[ai-character] ${label} — prompt: ${prompt.slice(0, 80)}…`)
 
   try {
     const res = await fetch(HF_ENDPOINT, {
@@ -101,8 +103,8 @@ export async function generateCharacterImage(
         inputs: prompt,
         parameters: {
           num_inference_steps: 4,   // schnell works in 1–4 steps
-          width:               512,
-          height:              768, // portrait orientation for character
+          width,
+          height,
         },
       }),
       signal: AbortSignal.timeout(60_000),
@@ -110,18 +112,61 @@ export async function generateCharacterImage(
 
     if (!res.ok) {
       const text = await res.text()
-      console.error('[ai-character] HF error', res.status, text.slice(0, 200))
+      console.error(`[ai-character] ${label} HF error ${res.status}:`, text.slice(0, 200))
       return null
     }
 
-    const buffer   = await res.arrayBuffer()
-    const mime     = res.headers.get('content-type') ?? 'image/jpeg'
-    const base64   = Buffer.from(buffer).toString('base64')
+    const buffer = await res.arrayBuffer()
+    const mime   = res.headers.get('content-type') ?? 'image/jpeg'
+    const base64 = Buffer.from(buffer).toString('base64')
 
-    console.log(`[ai-character] ✓ Generated ${Math.round(buffer.byteLength / 1024)} KB`)
+    console.log(`[ai-character] ✓ ${label} — ${Math.round(buffer.byteLength / 1024)} KB`)
     return `data:${mime};base64,${base64}`
   } catch (err) {
-    console.error('[ai-character] Failed:', err)
+    console.error(`[ai-character] ${label} failed:`, err)
     return null
   }
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Generates a cover character portrait via FLUX.1-schnell (512×768).
+ * Returns a base64 data-URL or `null` on failure (caller falls back to SVG).
+ */
+export async function generateCharacterImage(
+  appearance: AppearanceInput,
+): Promise<string | null> {
+  const prompt = buildCharacterPrompt(appearance)
+  return callFlux(prompt, 512, 768, 'cover portrait')
+}
+
+/**
+ * Generates a full scene illustration for a story page (384×640).
+ *
+ * @param appearance  Character appearance (injected for style consistency)
+ * @param childName   Child's name — replaces {{NAME}} in scene descriptions
+ * @param scene       Visual scene text from StoryPage.scene
+ */
+export async function generateSceneImage(
+  appearance: AppearanceInput,
+  childName:  string,
+  scene:      string,
+): Promise<string | null> {
+  const skin = SKIN[appearance.skinTone]       ?? 'medium skin'
+  const hc   = HAIR_COLOR[appearance.hairColor] ?? 'brown'
+  const hs   = HAIR_STYLE[appearance.hairStyle] ?? 'straight'
+  const eyes = EYES[appearance.eyeColor]        ?? 'brown'
+
+  // Replace {{NAME}} placeholder with the real child's name
+  const sceneText = scene.replace(/\{\{NAME\}\}/g, childName)
+
+  const prompt =
+    `children's book watercolor illustration, ${sceneText}, ` +
+    `the young child has ${skin}, ${hc} ${hs} hair, ${eyes} eyes, ` +
+    `full scene composition with detailed background, soft pastel colors, ` +
+    `professional storybook art style, Quentin Blake meets Pixar, ` +
+    `warm inviting atmosphere, no text, no speech bubbles`
+
+  return callFlux(prompt, 384, 640, `scene — ${scene.slice(0, 40)}`)
 }

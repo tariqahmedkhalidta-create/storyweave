@@ -42,6 +42,9 @@ model Order {
   // Cloud storage — null until the PDF is uploaded to S3 / R2
   pdfS3Key              String?
 
+  // Live progress message written by Render during AI illustration generation
+  progressMessage       String?
+
   @@index([stripePaymentIntentId])
   @@map("orders")
 }

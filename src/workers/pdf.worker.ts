@@ -1,20 +1,14 @@
 /**
  * PDF Worker — Puppeteer-based renderer.
  *
- * Takes a job descriptor, builds the full-book HTML, launches a headless
- * Chrome instance, prints to PDF, and writes the file to the local tmp dir.
+ * Generates a personalised PDF for a given order:
+ *   1. Cover portrait  (512×768)  via generateCharacterImage()
+ *   2. Story-page scenes (384×640) via generateSceneImage() — one per story page
+ *   3. Builds the full multi-page HTML with per-page scene illustrations
+ *   4. Prints to PDF via Puppeteer/Chromium
  *
- * In production this function body would be wrapped in a BullMQ job processor:
- *
- *   const worker = new Worker('pdf-generation', async (job) => {
- *     return runPDFJob(job.data)
- *   }, { connection: redis })
- *
- * For local testing we call it directly from pdf.service.ts.
- *
- * Prerequisites:
- *   npm install puppeteer
- *   (Puppeteer downloads Chromium automatically on first install)
+ * onProgress (optional): async callback invoked after each major step so the
+ * caller can relay live updates to the frontend.
  */
 
 import puppeteer from 'puppeteer'
@@ -22,21 +16,23 @@ import fs        from 'fs/promises'
 import path      from 'path'
 import os        from 'os'
 
-import { buildBookHTML } from '../lib/pdf/page-template'
-import type { AppearanceInput } from '../lib/pdf/character-svg-string'
-import { generateCharacterImage } from '../lib/ai-character'
+import { buildBookHTML }           from '../lib/pdf/page-template'
+import type { AppearanceInput }    from '../lib/pdf/character-svg-string'
+import { generateCharacterImage, generateSceneImage } from '../lib/ai-character'
+import { getStoryPages }           from '../lib/story-templates'
 
 // ── Output directory ──────────────────────────────────────────────────────────
-// Using os.tmpdir() so this works on macOS, Linux, and Windows.
 export const PDF_TMP_DIR = path.join(os.tmpdir(), 'storybooks')
 
 // ── Job descriptor ────────────────────────────────────────────────────────────
 export interface PDFJobInput {
-  orderId:   string
-  childName: string
+  orderId:    string
+  childName:  string
   appearance: AppearanceInput
   bookTitle?: string
   bookId?:    string
+  /** Optional progress callback — called after each illustration is generated. */
+  onProgress?: (msg: string) => Promise<void>
 }
 
 // ── Core renderer ─────────────────────────────────────────────────────────────
@@ -45,19 +41,57 @@ export interface PDFJobInput {
  * @returns Absolute path to the generated PDF file.
  */
 export async function runPDFJob(input: PDFJobInput): Promise<string> {
-  const { orderId, childName, appearance, bookTitle, bookId } = input
+  const { orderId, childName, appearance, bookTitle, bookId = 'enchanted-forest', onProgress } = input
+
+  const report = async (msg: string) => {
+    console.log(`[pdf.worker] ${msg}`)
+    if (onProgress) {
+      await onProgress(msg).catch(err =>
+        console.warn('[pdf.worker] progress callback failed:', err)
+      )
+    }
+  }
 
   // Ensure output directory exists
   await fs.mkdir(PDF_TMP_DIR, { recursive: true })
   const outputPath = path.join(PDF_TMP_DIR, `${orderId}.pdf`)
 
-  // Generate AI character illustration (falls back gracefully to SVG if unavailable)
-  console.log('[pdf.worker] Generating AI character illustration…')
-  const characterImageUrl = await generateCharacterImage(appearance) ?? undefined
+  // ── 1. Cover portrait ──────────────────────────────────────────────────────
+  await report(`✨ Painting ${childName}'s cover portrait…`)
+  const coverImageUrl = await generateCharacterImage(appearance) ?? undefined
 
-  // Build the full multi-page HTML document
-  const html = buildBookHTML({ childName, appearance, bookTitle, bookId, characterImageUrl })
+  // ── 2. Story page scene illustrations ─────────────────────────────────────
+  const storyPages    = getStoryPages(bookId)
+  const pageImageUrls: (string | undefined)[] = []
 
+  for (let i = 0; i < storyPages.length; i++) {
+    const page = storyPages[i]
+    const label = page.sceneLabel ?? `page ${i + 1}`
+
+    await report(`🎨 Illustrating page ${i + 1} of ${storyPages.length} — ${label}…`)
+
+    if (page.scene) {
+      const img = await generateSceneImage(appearance, childName, page.scene)
+      pageImageUrls.push(img ?? undefined)
+    } else {
+      // No scene defined — fall back to SVG for this page
+      pageImageUrls.push(undefined)
+    }
+  }
+
+  // ── 3. Build HTML ──────────────────────────────────────────────────────────
+  await report(`📖 Rendering your storybook PDF…`)
+
+  const html = buildBookHTML({
+    childName,
+    appearance,
+    bookTitle,
+    bookId,
+    coverImageUrl,
+    pageImageUrls,
+  })
+
+  // ── 4. Puppeteer print ─────────────────────────────────────────────────────
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -65,7 +99,7 @@ export async function runPDFJob(input: PDFJobInput): Promise<string> {
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--font-render-hinting=none', // crisper text rendering in PDFs
+      '--font-render-hinting=none',
     ],
   })
 
@@ -78,15 +112,14 @@ export async function runPDFJob(input: PDFJobInput): Promise<string> {
     // Load HTML — waitUntil:'networkidle0' ensures Google Fonts are downloaded
     await tab.setContent(html, { waitUntil: 'networkidle0', timeout: 30_000 })
 
-    // Print to PDF
-    // preferCSSPageSize:true honours our @page { size: A4; margin: 0 } rule
+    // Print to PDF — preferCSSPageSize honours @page { size: A4; margin: 0 }
     await tab.pdf({
-      path:               outputPath,
-      printBackground:    true,
-      preferCSSPageSize:  true,
+      path:              outputPath,
+      printBackground:   true,
+      preferCSSPageSize: true,
     })
 
-    console.log(`[pdf.worker] ✓ Generated ${outputPath}`)
+    console.log(`[pdf.worker] ✓ PDF generated — ${outputPath}`)
     return outputPath
   } finally {
     await browser.close()

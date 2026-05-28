@@ -39,6 +39,7 @@ export interface CartRecord {
   stripePaymentIntentId?: string
   customerEmail?:         string
   pdfS3Key?:              string
+  progressMessage?:       string
 }
 
 // ── Mapping helper ────────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ function toCartRecord(row: Order): CartRecord {
     stripePaymentIntentId: row.stripePaymentIntentId ?? undefined,
     customerEmail:         row.customerEmail         ?? undefined,
     pdfS3Key:              row.pdfS3Key              ?? undefined,
+    progressMessage:       row.progressMessage       ?? undefined,
   }
 }
 
@@ -137,6 +139,16 @@ export const cartStore = {
   async setCustomerEmail(orderId: string, customerEmail: string): Promise<boolean> {
     try {
       await db.order.update({ where: { id: orderId }, data: { customerEmail } })
+      return true
+    } catch {
+      return false
+    }
+  },
+
+  /** Write a live progress message during PDF generation. */
+  async updateProgress(orderId: string, progressMessage: string): Promise<boolean> {
+    try {
+      await db.order.update({ where: { id: orderId }, data: { progressMessage } })
       return true
     } catch {
       return false

@@ -25,6 +25,12 @@ import { runPDFJob, PDF_TMP_DIR } from '@/workers/pdf.worker'
 import { storage }                from '@/lib/storage'
 import { emailService }           from '@/lib/email'
 
+// ── Local progress helper (used when PDF runs in-process, not via microservice) ─
+
+async function localProgress(orderId: string, msg: string) {
+  await cartStore.updateProgress(orderId, msg)
+}
+
 // ── Return type ───────────────────────────────────────────────────────────────
 
 export type GenerationResult =
@@ -82,6 +88,7 @@ export async function generateBookPDF(orderId: string): Promise<GenerationResult
       appearance: order.appearance,
       bookTitle:  order.bookTitle,
       bookId:     order.bookId,
+      onProgress: (msg) => localProgress(orderId, msg),
     })
 
     // ── 4. Upload to cloud storage (if configured) ────────────────────────────
@@ -162,7 +169,8 @@ async function dispatchToMicroservice(orderId: string): Promise<void> {
 
   await cartStore.updateStatus(orderId, 'generating')
 
-  const callbackUrl = `${process.env.NEXT_APP_URL}/api/orders/${orderId}/fulfill`
+  const callbackUrl  = `${process.env.NEXT_APP_URL}/api/orders/${orderId}/fulfill`
+  const progressUrl  = `${process.env.NEXT_APP_URL}/api/orders/${orderId}/progress`
 
   const res = await fetch(`${process.env.PDF_SERVICE_URL}/generate`, {
     method:  'POST',
@@ -177,6 +185,7 @@ async function dispatchToMicroservice(orderId: string): Promise<void> {
       bookTitle:   order.bookTitle,
       bookId:      order.bookId,
       callbackUrl,
+      progressUrl,
     }),
   })
 

@@ -62,36 +62,56 @@ export interface BookData {
   appearance:         AppearanceInput
   bookTitle?:         string
   bookId?:            string
-  /** Base64 data-URL from AI image generator — if set, replaces the SVG character */
+  /** AI portrait for the cover page (512×768 data-URL) */
+  coverImageUrl?:     string
+  /** AI scene illustrations per story page — index 0 = page 1, etc. (384×640 data-URLs) */
+  pageImageUrls?:     (string | null | undefined)[]
+  /** @deprecated Use coverImageUrl instead */
   characterImageUrl?: string
 }
 
-export function buildBookHTML({ childName, appearance, bookTitle = 'The Enchanted Forest', bookId = 'enchanted-forest', characterImageUrl }: BookData): string {
-  // Character visuals — use AI image if available, otherwise fall back to SVG
-  const coverChar = characterImageUrl
-    ? `<img src="${characterImageUrl}" width="170" height="238" style="object-fit:contain;object-position:bottom" alt="${childName}"/>`
+export function buildBookHTML({
+  childName,
+  appearance,
+  bookTitle = 'The Enchanted Forest',
+  bookId    = 'enchanted-forest',
+  coverImageUrl,
+  pageImageUrls,
+  characterImageUrl,
+}: BookData): string {
+  // Support legacy callers that still pass characterImageUrl
+  const effectiveCoverUrl = coverImageUrl ?? characterImageUrl
+
+  // Cover character visual
+  const coverChar = effectiveCoverUrl
+    ? `<img src="${effectiveCoverUrl}" width="170" height="238" style="object-fit:contain;object-position:bottom" alt="${childName}"/>`
     : characterSVGString(appearance, childName, { width: 170, height: 238 })
 
-  const pageChar = characterImageUrl
-    ? `<img src="${characterImageUrl}" width="148" height="207" style="object-fit:contain;object-position:bottom" alt="${childName}"/>`
-    : characterSVGString(appearance, childName, { width: 148, height: 207 })
+  // SVG fallback for story pages (used when no scene image available)
+  const pageSVGFallback = characterSVGString(appearance, childName, { width: 148, height: 207 })
 
-  // Keep SVG vars for legacy reference (unused when AI image present)
-  const coverSVG = coverChar
-  const pageSVG  = pageChar
+  const storyPages = getStoryPages(bookId).map((p, i) => {
+    const bg       = GRADIENT_CSS[p.gradient] ?? FALLBACK_GRADIENT
+    const sceneUrl = pageImageUrls?.[i]
 
-  const storyPages = getStoryPages(bookId).map(p => {
-    const bg = GRADIENT_CSS[p.gradient] ?? FALLBACK_GRADIENT
+    const leftPanel = sceneUrl
+      // Full-bleed scene illustration fills the entire left panel
+      ? `<div class="char-panel scene-panel">
+            <img src="${sceneUrl}" class="scene-img" alt="Story illustration — page ${p.pageNumber}"/>
+          </div>`
+      // Fallback: gradient background + SVG character
+      : `<div class="char-panel" style="background:${bg}">
+            <span class="deco" style="top:6%;left:8%">✦</span>
+            <span class="deco" style="bottom:14%;right:10%">✦</span>
+            <div class="char-wrap">${pageSVGFallback}</div>
+          </div>`
+
     return `
       <div class="page">
         <div class="split">
 
-          <!-- Left: character panel -->
-          <div class="char-panel" style="background:${bg}">
-            <span class="deco" style="top:6%;left:8%">✦</span>
-            <span class="deco" style="bottom:14%;right:10%">✦</span>
-            <div class="char-wrap">${pageSVG}</div>
-          </div>
+          <!-- Left: illustration panel -->
+          ${leftPanel}
 
           <!-- Right: text panel -->
           <div class="text-panel">
@@ -214,6 +234,21 @@ export function buildBookHTML({ childName, appearance, bookTitle = 'The Enchante
     }
     .char-wrap { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); }
 
+    /* Full-bleed scene illustration mode */
+    .scene-panel {
+      padding:         0;
+      align-items:     stretch;
+      justify-content: stretch;
+      overflow:        hidden;
+    }
+    .scene-img {
+      width:            100%;
+      height:           100%;
+      object-fit:       cover;
+      object-position:  center top;
+      display:          block;
+    }
+
     .deco {
       position:    absolute;
       font-size:   22px;
@@ -294,7 +329,7 @@ export function buildBookHTML({ childName, appearance, bookTitle = 'The Enchante
       <p class="cover-eyebrow">A personalized storybook</p>
       <h1 class="cover-title">${bookTitle}</h1>
       <p class="cover-sub">A story starring ${childName}</p>
-      <div class="cover-char">${coverSVG}</div>
+      <div class="cover-char">${coverChar}</div>
       <p class="cover-footer">StoryWeave ✦ Made with love</p>
     </div>
   </div>

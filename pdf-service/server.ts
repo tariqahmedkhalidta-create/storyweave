@@ -1,7 +1,7 @@
 /**
  * StoryWeave PDF Generation Microservice
  *
- * Runs Puppeteer inside a persistent Docker container on Fly.io.
+ * Runs Puppeteer inside a persistent Docker container on Render.
  * The Next.js app cannot run Puppeteer directly (serverless bundle limits),
  * so it delegates to this service via HTTP after payment is confirmed.
  *
@@ -16,10 +16,11 @@
  *
  * Flow:
  *   1. Next.js webhook fires POST /generate (fire-and-forget)
- *   2. This service generates the PDF with Puppeteer
- *   3. Uploads the PDF to S3 / R2
- *   4. POSTs the result back to callbackUrl (Next.js /api/orders/[id]/fulfill)
- *   5. Next.js marks the order fulfilled and sends the "book ready" email
+ *   2. This service generates the PDF with Puppeteer (5 AI illustrations + render)
+ *   3. Progress updates are POSTed back to progressUrl during generation
+ *   4. Uploads the PDF to S3 / R2
+ *   5. POSTs the final result back to callbackUrl (Next.js /api/orders/[id]/fulfill)
+ *   6. Next.js marks the order fulfilled and sends the "book ready" email
  */
 
 import express, { type Request, type Response, type NextFunction } from 'express'
@@ -58,17 +59,18 @@ function requireSecret(req: Request, res: Response, next: NextFunction) {
 // ── POST /generate ────────────────────────────────────────────────────────────
 
 interface GenerateBody {
-  orderId:     string
-  childName:   string
-  appearance:  CharacterAppearance
-  bookTitle:   string
-  bookId?:     string
-  callbackUrl: string   // Next.js /api/orders/[orderId]/fulfill
+  orderId:      string
+  childName:    string
+  appearance:   CharacterAppearance
+  bookTitle:    string
+  bookId?:      string
+  callbackUrl:  string   // Next.js /api/orders/[orderId]/fulfill
+  progressUrl?: string   // Next.js /api/orders/[orderId]/progress  (optional)
 }
 
 app.post('/generate', requireSecret, (req: Request, res: Response) => {
   const body = req.body as GenerateBody
-  const { orderId, childName, appearance, bookTitle, bookId, callbackUrl } = body
+  const { orderId, childName, appearance, bookTitle, bookId, callbackUrl, progressUrl } = body
 
   if (!orderId || !childName || !appearance || !callbackUrl) {
     res.status(400).json({ error: 'Missing required fields.' })
@@ -79,22 +81,31 @@ app.post('/generate', requireSecret, (req: Request, res: Response) => {
   res.status(202).json({ received: true, orderId })
 
   // Run generation asynchronously (no await here)
-  processJob({ orderId, childName, appearance, bookTitle, bookId }, callbackUrl)
+  processJob({ orderId, childName, appearance, bookTitle, bookId }, callbackUrl, progressUrl)
     .catch(err => console.error(`[pdf-service] Unexpected error for order ${orderId}:`, err))
 })
 
 // ── Job processor ─────────────────────────────────────────────────────────────
 
-async function processJob(input: PDFJobInput, callbackUrl: string) {
+async function processJob(
+  input:        PDFJobInput,
+  callbackUrl:  string,
+  progressUrl?: string,
+) {
   const { orderId } = input
   console.log(`[pdf-service] Starting job for order ${orderId}`)
+
+  // Build an onProgress callback that POSTs updates to the Next.js progress endpoint
+  const onProgress = progressUrl
+    ? async (msg: string) => { await sendProgress(progressUrl, msg) }
+    : undefined
 
   let filePath: string | null = null
   let s3Key:    string | null = null
 
   try {
-    // 1. Generate PDF with Puppeteer
-    filePath = await runPDFJob(input)
+    // 1. Generate PDF with Puppeteer (includes AI illustration calls)
+    filePath = await runPDFJob({ ...input, onProgress })
     console.log(`[pdf-service] ✓ PDF generated for order ${orderId}`)
 
     // 2. Upload to S3 / R2 if configured
@@ -147,6 +158,24 @@ async function sendCallback(url: string, payload: CallbackPayload) {
     }
   } catch (err) {
     console.error(`[pdf-service] Failed to reach callback ${url}:`, err)
+  }
+}
+
+// ── Progress helper ───────────────────────────────────────────────────────────
+
+async function sendProgress(url: string, message: string) {
+  try {
+    await fetch(url, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SECRET}`,
+      },
+      body: JSON.stringify({ message }),
+      signal: AbortSignal.timeout(5_000),
+    })
+  } catch {
+    // Non-fatal — progress updates are best-effort
   }
 }
 

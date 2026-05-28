@@ -166,50 +166,98 @@ function ProgressBar({ stage }: { stage: Stage }) {
   )
 }
 
-// ── Polling status steps ──────────────────────────────────────────────────────
+// ── Illustration progress overlay ─────────────────────────────────────────────
 
-function PollingStatus() {
-  // Animate step 2 and 3 progressively with local timers
-  const [genStarted, setGenStarted] = useState(false)
+/**
+ * Maps a progress message string to an estimated percentage (0–95).
+ * We never reach 100% here — that only happens when status === 'fulfilled'.
+ */
+function msgToPct(msg: string | null): number {
+  if (!msg) return 5
+  const m = msg.toLowerCase()
+  if (m.includes('cover'))      return 18
+  if (m.includes('page 1'))     return 34
+  if (m.includes('page 2'))     return 50
+  if (m.includes('page 3'))     return 66
+  if (m.includes('page 4'))     return 80
+  if (m.includes('rendering'))  return 90
+  return 10
+}
+
+function PollingStatus({ progressMessage }: { progressMessage?: string | null }) {
+  // Smoothly animate toward the target percentage
+  const target = msgToPct(progressMessage ?? null)
+  const [displayed, setDisplayed] = useState(5)
 
   useEffect(() => {
-    const t = setTimeout(() => setGenStarted(true), 3_000)
-    return () => clearTimeout(t)
-  }, [])
+    // Step toward target progressively so the bar doesn't snap
+    if (displayed < target) {
+      const id = setTimeout(() => setDisplayed(p => Math.min(p + 2, target)), 80)
+      return () => clearTimeout(id)
+    }
+  }, [displayed, target])
 
+  // Illustration step labels for the mini checklist
   const steps = [
-    { label: 'Payment confirmed',         done: true,        active: false           },
-    { label: 'Personalising your story',  done: genStarted,  active: !genStarted     },
-    { label: 'Rendering PDF',             done: false,        active: genStarted      },
+    { key: 'cover',      emoji: '✨', label: 'Cover portrait',   doneAt: 18 },
+    { key: 'page1',      emoji: '🎨', label: 'Scene — page 1',   doneAt: 34 },
+    { key: 'page2',      emoji: '🎨', label: 'Scene — page 2',   doneAt: 50 },
+    { key: 'page3',      emoji: '🎨', label: 'Scene — page 3',   doneAt: 66 },
+    { key: 'page4',      emoji: '🎨', label: 'Scene — page 4',   doneAt: 80 },
+    { key: 'rendering',  emoji: '📖', label: 'Printing PDF',      doneAt: 92 },
   ]
 
   return (
-    <div className="bg-white rounded-xl ring-1 ring-black/5 px-5 py-4 space-y-3.5">
-      {steps.map(step => (
-        <div key={step.label} className="flex items-center gap-3">
-          <span
-            className={`
-              w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px]
-              ${step.done   ? 'bg-emerald-500 text-white'  : ''}
-              ${step.active ? 'bg-violet-100'              : ''}
-              ${!step.done && !step.active ? 'bg-slate-100' : ''}
-            `}
-          >
-            {step.done && '✓'}
-            {step.active && <Spinner className="h-3 w-3 text-violet-500" />}
-          </span>
-          <span
-            className={`
-              text-sm font-medium
-              ${step.done   ? 'text-emerald-700' : ''}
-              ${step.active ? 'text-violet-700'  : ''}
-              ${!step.done && !step.active ? 'text-slate-400' : ''}
-            `}
-          >
-            {step.label}
-          </span>
-        </div>
-      ))}
+    <div className="bg-white rounded-xl ring-1 ring-black/5 overflow-hidden">
+      {/* Live message */}
+      <div className="px-5 pt-4 pb-3 flex items-start gap-3">
+        <Spinner className="h-4 w-4 text-violet-500 flex-shrink-0 mt-0.5" />
+        <p className="text-sm font-medium text-violet-700 leading-snug min-h-[20px]">
+          {progressMessage ?? 'Starting the illustration studio…'}
+        </p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mx-5 mb-4 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+        <div
+          className="h-full bg-violet-500 rounded-full transition-all duration-300 ease-out"
+          style={{ width: `${displayed}%` }}
+        />
+      </div>
+
+      {/* Step checklist */}
+      <div className="border-t border-slate-50 px-5 py-3.5 space-y-2.5">
+        {steps.map(step => {
+          const done   = displayed >= step.doneAt
+          const active = !done && displayed >= step.doneAt - 18
+          return (
+            <div key={step.key} className="flex items-center gap-2.5">
+              <span
+                className={`
+                  w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px]
+                  ${done   ? 'bg-emerald-500 text-white'  : ''}
+                  ${active ? 'bg-violet-100'              : ''}
+                  ${!done && !active ? 'bg-slate-100'     : ''}
+                `}
+              >
+                {done   && '✓'}
+                {active && <Spinner className="h-3 w-3 text-violet-500" />}
+                {!done && !active && <span className="text-slate-300 text-[8px]">○</span>}
+              </span>
+              <span
+                className={`
+                  text-xs font-medium
+                  ${done   ? 'text-emerald-700' : ''}
+                  ${active ? 'text-violet-700'  : ''}
+                  ${!done && !active ? 'text-slate-300' : ''}
+                `}
+              >
+                {step.emoji} {step.label}
+              </span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -311,15 +359,16 @@ function PaymentForm({
 
 export function CheckoutActions({ orderId, priceFormatted }: Props) {
   // Start on the email stage; jump straight to polling on Stripe redirect
-  const [stage,        setStage]        = useState<Stage>('email')
-  const [email,        setEmail]        = useState('')
-  const [emailError,   setEmailError]   = useState('')
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [downloadUrl,  setDownloadUrl]  = useState('')
-  const [errorMsg,     setErrorMsg]     = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [stage,           setStage]           = useState<Stage>('email')
+  const [email,           setEmail]           = useState('')
+  const [emailError,      setEmailError]      = useState('')
+  const [clientSecret,    setClientSecret]    = useState<string | null>(null)
+  const [downloadUrl,     setDownloadUrl]     = useState('')
+  const [errorMsg,        setErrorMsg]        = useState('')
+  const [isProcessing,    setIsProcessing]    = useState(false)
+  const [progressMessage, setProgressMessage] = useState<string | null>(null)
   // retryKey forces the fetch-client-secret effect to re-run on retry
-  const [retryKey,     setRetryKey]     = useState(0)
+  const [retryKey,        setRetryKey]        = useState(0)
 
   // Keep a ref to stage so async callbacks read the latest value
   const stageRef = useRef(stage)
@@ -377,7 +426,14 @@ export function CheckoutActions({ orderId, priceFormatted }: Props) {
 
         try {
           const res  = await fetch(`/api/orders/${orderId}/status`)
-          const data = await res.json() as { status: string; downloadUrl?: string }
+          const data = await res.json() as {
+            status: string
+            downloadUrl?: string
+            progressMessage?: string | null
+          }
+
+          // Always update the live progress message
+          if (data.progressMessage) setProgressMessage(data.progressMessage)
 
           if (data.status === 'fulfilled' && data.downloadUrl) {
             if (!cancelled) { setDownloadUrl(data.downloadUrl); setStage('complete') }
@@ -430,6 +486,7 @@ export function CheckoutActions({ orderId, priceFormatted }: Props) {
     setErrorMsg('')
     setIsProcessing(false)
     setClientSecret(null)
+    setProgressMessage(null)
     // Go back to the email step on retry so the user can correct it if needed
     setStage('email')
   }, [])
@@ -535,14 +592,16 @@ export function CheckoutActions({ orderId, priceFormatted }: Props) {
       {/* ── Polling: waiting for webhook + PDF ──────────────────────────── */}
       {stage === 'polling' && (
         <div className="space-y-3">
-          <div className="w-full py-5 rounded-xl bg-violet-600 text-white shadow-lg
-            flex flex-col items-center justify-center gap-1.5">
+          <div className="w-full py-4 px-5 rounded-xl bg-violet-600 text-white shadow-lg
+            flex flex-col gap-1">
             <div className="flex items-center gap-2.5 font-semibold text-lg">
-              <Spinner /> Creating your personalised book…
+              <Spinner /> Illustrating your personalised book…
             </div>
-            <p className="text-violet-200 text-xs">This usually takes 10–20 seconds</p>
+            <p className="text-violet-200 text-xs">
+              Painting 5 unique AI illustrations — usually 30–45 seconds
+            </p>
           </div>
-          <PollingStatus />
+          <PollingStatus progressMessage={progressMessage} />
         </div>
       )}
 
