@@ -69,8 +69,10 @@ export function buildCharacterPrompt(appearance: AppearanceInput): string {
 
 // ── API call ──────────────────────────────────────────────────────────────────
 
+// The HF router is at router.huggingface.co — the old api-inference.huggingface.co
+// hostname no longer resolves from Vercel's servers.
 const HF_ENDPOINT =
-  'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell'
+  'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell'
 
 /**
  * Generates a character illustration via FLUX.1-schnell on Hugging Face.
@@ -101,7 +103,6 @@ export async function generateCharacterImage(
           num_inference_steps: 4,   // schnell works in 1–4 steps
           width:               512,
           height:              768, // portrait orientation for character
-          guidance_scale:      0,   // schnell ignores CFG
         },
       }),
       signal: AbortSignal.timeout(60_000),

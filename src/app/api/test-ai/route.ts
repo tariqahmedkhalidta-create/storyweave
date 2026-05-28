@@ -9,7 +9,7 @@ export const runtime     = 'nodejs'
 export const maxDuration = 60
 
 const HF_ENDPOINT =
-  'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell'
+  'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell'
 
 export async function GET() {
   const token = process.env.HUGGINGFACE_TOKEN
@@ -37,7 +37,7 @@ export async function GET() {
       },
       body: JSON.stringify({
         inputs: "children's book illustration, adorable young child, brown braided hair, happy smile, watercolor style",
-        parameters: { num_inference_steps: 1, width: 256, height: 256 },
+        parameters: { num_inference_steps: 1, width: 256, height: 384 },
       }),
       signal: AbortSignal.timeout(55_000),
     })
